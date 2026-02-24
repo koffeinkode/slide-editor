@@ -1,223 +1,776 @@
 <!doctype html>
 <html lang="nb">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reveal-test</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
-  <!-- PDF print: åpne med ?print-pdf i URL, deretter Fil → Skriv ut i Chrome -->
-  <script>
-    if (window.location.search.includes('print-pdf')) {
-      document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/monokai.css">');
-    }
-  </script>
-  <style>
-    .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Slide Editor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1e1e1e;--panel:#252526;--p2:#2d2d30;--border:#3e3e42;
+  --text:#cccccc;--dim:#6e7681;--accent:#0078d4;--ah:#106ebe;
+  --danger:#f44747;--r:5px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
 
-    .bilde-rad {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 1rem;
-    }
-    .bilde-rad img {
-      border-radius: 12px;
-      width: 200px;
-      height: 140px;
-      object-fit: cover;
-    }
+/* TOPBAR */
+.topbar{height:36px;background:#323233;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0}
+.tb-title{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.tb-badge{font-size:10px;background:var(--accent);color:#fff;padding:1px 7px;border-radius:10px}
+.tb-sep{width:1px;height:18px;background:var(--border);margin:0 2px}
+.tb-space{flex:1}
+.tb-btn{height:26px;padding:0 10px;background:var(--p2);color:var(--text);border:1px solid var(--border);border-radius:var(--r);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .12s,border-color .12s;white-space:nowrap}
+.tb-btn:hover{background:#3e3e42;border-color:#555}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tb-btn.primary:hover{background:var(--ah);border-color:var(--ah)}
+.tb-btn input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;inset:0}
 
-    .kort-rad {
-      display: flex;
-      gap: 1.5rem;
-      justify-content: center;
-      margin-top: 1.5rem;
-    }
-    .kort {
-      background: rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 1.5rem 2rem;
-      width: 200px;
-    }
-    .kort h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
-    .kort p  { margin: 0; font-size: 0.85rem; opacity: 0.75; }
+/* LAYOUT */
+.editor{flex:1;display:grid;grid-template-columns:210px 1fr 272px;min-height:0}
 
-    .stor-tall {
-      font-size: 5rem;
-      font-weight: 700;
-      line-height: 1;
-      color: #42affa;
-    }
-    .etikett {
-      font-size: 0.9rem;
-      opacity: 0.6;
-      margin-top: 0.25rem;
-    }
+/* LEFT PANEL */
+.panel-slides{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:10px 10px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.plabel{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
+.btn-ny{width:100%;height:28px;background:var(--p2);color:var(--text);border:1px solid var(--border);border-radius:var(--r);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .12s}
+.btn-ny:hover{background:#3e3e42}
+.slide-liste{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:4px}
+.slide-liste::-webkit-scrollbar{width:6px}
+.slide-liste::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.sk{border-radius:var(--r);border:1.5px solid transparent;cursor:pointer;overflow:hidden;transition:border-color .12s}
+.sk:hover{border-color:#555}
+.sk.aktiv{border-color:var(--accent)}
+.sk-thumb{width:100%;aspect-ratio:16/9;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;overflow:hidden}
+.sk-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45}
+.sk-overlay{position:relative;z-index:1;text-align:center;pointer-events:none}
+.sk-t{font-size:11px;font-weight:600;color:#fff;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.7);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sk-b{font-size:8px;color:rgba(255,255,255,.55);margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:160px}
+.sk-foot{background:rgba(0,0,0,.35);padding:3px 6px;display:flex;align-items:center;gap:2px}
+.sk-nr{font-size:10px;color:rgba(255,255,255,.4);flex:1}
+.sk-acts{display:flex;gap:1px}
+.bik{width:20px;height:20px;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;transition:background .1s,color .1s}
+.bik:hover{background:rgba(255,255,255,.1);color:#fff}
+.bik.slett:hover{color:var(--danger)}
 
-    .profil {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      justify-content: center;
-    }
-    .profil img {
-      border-radius: 50%;
-      width: 140px;
-      height: 140px;
-      object-fit: cover;
-    }
-    .profil-tekst { text-align: left; }
-    .profil-tekst h2 { margin: 0 0 0.4rem; }
-    .profil-tekst p  { margin: 0; opacity: 0.7; }
-  </style>
+/* CENTER PANEL */
+.panel-center{background:#181818;display:flex;flex-direction:column;overflow:hidden}
+.center-bar{height:32px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:8px;flex-shrink:0}
+.center-bar-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.center-bar-space{flex:1}
+.mode-toggle{display:flex;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.mode-btn{height:22px;padding:0 10px;background:var(--p2);color:var(--dim);border:none;font-size:11px;cursor:pointer;transition:background .1s,color .1s}
+.mode-btn.aktiv{background:var(--accent);color:#fff}
+.nav-btns{display:flex;gap:3px}
+.nav-btn{width:24px;height:22px;background:var(--p2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s}
+.nav-btn:hover{background:#3e3e42}
+.slide-counter{font-size:11px;color:var(--dim)}
+
+/* CANVAS EDITOR */
+.canvas-wrapper{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px;position:relative}
+.canvas-wrapper.drag-over{background:rgba(0,120,212,.08)}
+.drop-overlay{display:none;position:absolute;inset:0;background:rgba(0,120,212,.15);border:2px dashed var(--accent);border-radius:8px;z-index:100;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:var(--accent);pointer-events:none}
+.drop-overlay.vis{display:flex}
+
+#slide-canvas{
+  width:960px;height:540px;
+  position:relative;overflow:hidden;border-radius:6px;
+  box-shadow:0 8px 40px rgba(0,0,0,.6);
+  cursor:default;transform-origin:center center;
+}
+
+.canvas-tittel{position:absolute;left:5%;right:5%;top:12%;font-size:42px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);line-height:1.15;pointer-events:none;word-break:break-word}
+.canvas-tekst{position:absolute;left:5%;right:5%;top:42%;font-size:22px;color:rgba(255,255,255,.75);pointer-events:none;word-break:break-word;line-height:1.5}
+.canvas-fragments{position:absolute;left:5%;right:5%;bottom:8%;font-size:18px;color:rgba(255,255,255,.7);pointer-events:none}
+.canvas-fragments li{margin-top:.3em;list-style:disc;margin-left:1.2em;opacity:.7}
+.canvas-video-ph{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:12px 24px;font-size:14px;color:rgba(255,255,255,.7);pointer-events:none}
+
+/* DRAGGABLE IMAGE */
+.bilde-container{position:absolute;cursor:move;touch-action:none}
+.bilde-container img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;border-radius:4px}
+.bilde-container.valgt{outline:2px solid var(--accent);outline-offset:1px}
+.bilde-container.valgt .resize-se,.bilde-container.valgt .resize-sw,.bilde-container.valgt .resize-ne,.bilde-container.valgt .resize-nw{display:block}
+.resize-se,.resize-sw,.resize-ne,.resize-nw{display:none;position:absolute;width:12px;height:12px;background:var(--accent);border:2px solid #fff;border-radius:2px}
+.resize-se{bottom:-6px;right:-6px;cursor:se-resize}
+.resize-sw{bottom:-6px;left:-6px;cursor:sw-resize}
+.resize-ne{top:-6px;right:-6px;cursor:ne-resize}
+.resize-nw{top:-6px;left:-6px;cursor:nw-resize}
+
+/* IFRAME PREVIEW */
+#preview-iframe{flex:1;width:100%;border:none;display:none}
+
+/* RIGHT PANEL */
+.panel-egenskaper{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.eg-scroll{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+.eg-scroll::-webkit-scrollbar{width:6px}
+.eg-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.sek-tittel{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding-bottom:6px;border-bottom:1px solid var(--border)}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.fls{font-weight:400;text-transform:none;letter-spacing:0}
+.fi{background:var(--p2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;padding:6px 8px;width:100%;outline:none;transition:border-color .12s;font-family:inherit;resize:vertical}
+.fi:focus{border-color:var(--accent)}
+.farge-rad{display:flex;gap:6px;align-items:center}
+.fp{width:36px;height:32px;border-radius:var(--r);border:1px solid var(--border);padding:2px;background:var(--p2);cursor:pointer;flex-shrink:0}
+.fhex{flex:1;background:var(--p2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;font-family:'Cascadia Code','Fira Code',monospace;padding:6px 8px;outline:none;transition:border-color .12s}
+.fhex:focus{border-color:var(--accent)}
+.media-tabs{display:flex;gap:2px;margin-bottom:6px}
+.mt{flex:1;height:26px;background:var(--p2);border:1px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--dim);cursor:pointer;transition:all .12s}
+.mt.aktiv{background:var(--accent);border-color:var(--accent);color:#fff}
+.fu-wrap{position:relative}
+.fu-btn{width:100%;height:32px;background:var(--p2);border:1px dashed var(--border);border-radius:var(--r);color:var(--dim);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color .12s,color .12s;position:relative}
+.fu-btn:hover{border-color:var(--accent);color:var(--text)}
+.fu-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.mprev{margin-top:6px;display:flex;align-items:flex-start;gap:8px}
+.mprev img,.mprev video{max-width:100%;max-height:90px;border-radius:4px;border:1px solid var(--border);object-fit:cover}
+.mfn{font-size:11px;color:var(--dim);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.btn-fjern{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;transition:color .1s;padding:2px;flex-shrink:0}
+.btn-fjern:hover{color:var(--danger)}
+.divider{height:1px;background:var(--border)}
+.pos-rad{display:flex;gap:6px}
+.pos-felt{flex:1;display:flex;flex-direction:column;gap:3px}
+.pos-label{font-size:10px;color:var(--dim)}
+.pos-inp{background:var(--p2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;font-family:monospace;padding:4px 6px;width:100%;outline:none;transition:border-color .12s}
+.pos-inp:focus{border-color:var(--accent)}
+.eg-footer{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.btn-eks{width:100%;height:32px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-eks:hover{background:var(--ah)}
+.ingen{display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:12px;text-align:center;line-height:1.7;padding:20px;min-height:100px}
+</style>
 </head>
 <body>
-<div class="reveal">
-  <div class="slides">
 
-    <!-- 1. Tittel -->
-    <section data-auto-animate>
-      <h1 data-id="tittel" style="font-size:2.5rem">Reveal.js Demo</h1>
-      <p style="opacity:0.6">Auto-animate · Fragments · Bilder</p>
-      <aside class="notes">
-        Åpningsslide. Si hei til publikum og presenter deg selv.
-        Neste slide: tittelen animerer automatisk.
-      </aside>
-    </section>
-
-    <!-- 2. Tittel vokser -->
-    <section data-auto-animate>
-      <h1 data-id="tittel" style="font-size:5rem">Reveal.js Demo</h1>
-      <p style="opacity:0.4; font-size:0.85rem">Tittel animerer automatisk mellom slides</p>
-    </section>
-
-    <!-- 3. Liste med fragments -->
-    <section>
-      <h2>Fragments</h2>
-      <aside class="notes">
-        Trykk mellomrom for å avsløre hvert punkt ett om gangen.
-        Siste punkt strykes over – poeng: noe vi ikke gjør lenger.
-      </aside>
-      <p style="opacity:0.6; font-size:0.9rem">Trykk → for å avsløre hvert punkt</p>
-      <ul>
-        <li class="fragment fade-up">Første punkt dukker opp</li>
-        <li class="fragment fade-up">Deretter dette</li>
-        <li class="fragment fade-up">Og til slutt dette</li>
-        <li class="fragment highlight-blue">Dette <em>fremheves</em> i blått</li>
-        <li class="fragment strike">Dette strykes over</li>
-      </ul>
-    </section>
-
-    <!-- 4. Bilde starter lite -->
-    <section data-auto-animate>
-      <h2 data-id="bilde-tittel">Bildegalleri</h2>
-      <img data-id="hovbilde"
-           src="https://picsum.photos/seed/abc/600/350"
-           style="border-radius:12px; width:300px; margin-top:1rem">
-    </section>
-
-    <!-- 5. Bilde vokser, andre dukker opp -->
-    <section data-auto-animate>
-      <h2 data-id="bilde-tittel">Bildegalleri</h2>
-      <img data-id="hovbilde"
-           src="https://picsum.photos/seed/abc/600/350"
-           style="border-radius:12px; width:560px">
-      <div class="bilde-rad">
-        <img src="https://picsum.photos/seed/def/400/280" alt="">
-        <img src="https://picsum.photos/seed/ghi/400/280" alt="">
-        <img src="https://picsum.photos/seed/jkl/400/280" alt="">
-      </div>
-    </section>
-
-    <!-- 6. Statistikk med fragments -->
-    <section>
-      <h2>Nøkkeltall</h2>
-      <aside class="notes">
-        Tallene kommer ett om gangen. Ta en pause mellom hvert for effekt.
-        Enden er en vits – «uendelig kaffe» – publikum ler som regel her.
-      </aside>
-      <div class="kort-rad">
-        <div class="fragment fade-up kort">
-          <div class="stor-tall">42</div>
-          <div class="etikett">Prosjekter</div>
-        </div>
-        <div class="fragment fade-up kort">
-          <div class="stor-tall">8</div>
-          <div class="etikett">År erfaring</div>
-        </div>
-        <div class="fragment fade-up kort">
-          <div class="stor-tall">∞</div>
-          <div class="etikett">Kaffe</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. Profil liten -->
-    <section data-auto-animate>
-      <div class="profil">
-        <img data-id="profilbilde"
-             src="https://picsum.photos/seed/portrett/300/300"
-             style="width:80px; height:80px">
-        <div class="profil-tekst">
-          <h2 data-id="profilnavn" style="font-size:1.2rem">Ola Nordmann</h2>
-          <p>Designer & utvikler</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 8. Profil vokser -->
-    <section data-auto-animate>
-      <div class="profil">
-        <img data-id="profilbilde"
-             src="https://picsum.photos/seed/portrett/300/300"
-             style="width:160px; height:160px">
-        <div class="profil-tekst">
-          <h2 data-id="profilnavn" style="font-size:2rem">Ola Nordmann</h2>
-          <p>Designer & utvikler</p>
-          <p class="fragment fade-up" style="margin-top:0.5rem; color:#42affa">
-            hei@example.com
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 9. Bakgrunnsbilde -->
-    <section data-background="https://picsum.photos/seed/landskap/1280/720"
-             data-background-opacity="0.4">
-      <h2 style="font-size:3rem">Bildebakgrunn</h2>
-      <p class="fragment">Med justerbar opacity</p>
-    </section>
-
-    <!-- 10. Avslutning med auto-animate -->
-    <section data-auto-animate>
-      <h2 data-id="slutt">Det var det!</h2>
-    </section>
-
-    <section data-auto-animate>
-      <h2 data-id="slutt" style="font-size:4rem; color:#42affa">Det var det!</h2>
-      <p class="fragment fade-up">Trykk <kbd>S</kbd> for foredragsholder-notater</p>
-      <p class="fragment fade-up">Trykk <kbd>F</kbd> for fullskjerm</p>
-      <p class="fragment fade-up">Legg til <code>?print-pdf</code> i URL for PDF-eksport</p>
-      <aside class="notes">
-        Her kan du skrive notater som bare vises i speaker view.
-        Åpnes med S-tasten.
-      </aside>
-    </section>
-
+<div class="topbar">
+  <span class="tb-title">Slide Editor</span>
+  <span class="tb-badge">Reveal.js</span>
+  <div class="tb-sep"></div>
+  <div class="tb-btn" style="position:relative;overflow:hidden">
+    ↑ Importer HTML
+    <input type="file" accept=".html" onchange="importerHTML(this.files[0])">
   </div>
+  <div class="tb-space"></div>
+  <button class="tb-btn primary" onclick="eksporter()">↓ Eksporter HTML</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+<div class="editor">
+
+  <!-- LEFT -->
+  <aside class="panel-slides">
+    <div class="ph">
+      <div class="plabel">Slides</div>
+      <button class="btn-ny" onclick="nySlide()">+ Ny slide</button>
+    </div>
+    <div class="slide-liste" id="slide-liste"></div>
+  </aside>
+
+  <!-- CENTER -->
+  <main class="panel-center">
+    <div class="center-bar">
+      <span class="center-bar-label" id="center-label">Slide 1</span>
+      <div class="center-bar-space"></div>
+      <span class="slide-counter" id="slide-counter">1 / 1</span>
+      <div class="nav-btns">
+        <button class="nav-btn" onclick="navSlide(-1)">←</button>
+        <button class="nav-btn" onclick="navSlide(1)">→</button>
+      </div>
+      <div class="mode-toggle">
+        <button class="mode-btn aktiv" id="mode-rediger" onclick="byttModus('rediger')">Rediger</button>
+        <button class="mode-btn" id="mode-preview" onclick="byttModus('forhåndsvis')">Forhåndsvis</button>
+      </div>
+    </div>
+    <div class="canvas-wrapper" id="canvas-wrapper"
+      ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div class="drop-overlay" id="drop-overlay">Slipp bilde eller video her</div>
+      <div id="slide-canvas">
+        <div class="canvas-tittel" id="canvas-tittel"></div>
+        <div class="canvas-tekst" id="canvas-tekst"></div>
+        <div class="canvas-fragments" id="canvas-fragments"></div>
+        <div class="canvas-video-ph" id="canvas-video" style="display:none">▶ Video</div>
+        <div class="bilde-container" id="bilde-container" style="display:none">
+          <img id="canvas-bilde" draggable="false" alt="">
+          <div class="resize-nw" data-dir="nw"></div>
+          <div class="resize-ne" data-dir="ne"></div>
+          <div class="resize-sw" data-dir="sw"></div>
+          <div class="resize-se" data-dir="se"></div>
+        </div>
+      </div>
+    </div>
+    <iframe id="preview-iframe" allow="autoplay; fullscreen"></iframe>
+  </main>
+
+  <!-- RIGHT -->
+  <aside class="panel-egenskaper">
+    <div class="eg-scroll" id="eg-innhold">
+      <div class="ingen">Velg en slide</div>
+    </div>
+    <div class="eg-footer">
+      <button class="btn-eks" onclick="eksporter()">↓ Eksporter presentasjon.html</button>
+    </div>
+  </aside>
+
+</div>
+
 <script>
-  Reveal.initialize({
-    hash: true,
-    transition: 'slide',
-    autoAnimateDuration: 0.8,
-    autoAnimateEasing: 'ease-in-out',
-    plugins: [ RevealNotes ],
+// ── KONSTANTER ────────────────────────────────────
+const CW = 960, CH = 540;
+
+// ── DATA ──────────────────────────────────────────
+let neste_id = 3;
+let slides = [
+  { id:1, tittel:'Tittel på presentasjonen', tekst:'Undertittel eller ingress', bg:'#1a1a2e', notater:'Åpningsslide – si hei.', fragments:'', bilde:null, video:null },
+  { id:2, tittel:'Neste punkt', tekst:'Klikk på en slide for å redigere', bg:'#16213e', notater:'', fragments:'Punkt én\nPunkt to\nPunkt tre', bilde:null, video:null },
+];
+let aktivId = 1;
+let modus = 'rediger'; // 'rediger' | 'forhåndsvis'
+
+// ── DRAG STATE ─────────────────────────────────────
+let dragState = null; // { type:'move'|'resize', dir, startMX,startMY, startX,startY,startW,startH }
+let bildeValgt = false;
+
+// ── SCALE ─────────────────────────────────────────
+function getScale() {
+  const w = document.getElementById('canvas-wrapper');
+  const p = 32;
+  return Math.min((w.clientWidth - p*2) / CW, (w.clientHeight - p*2) / CH);
+}
+
+function oppdaterScale() {
+  const canvas = document.getElementById('slide-canvas');
+  const s = getScale();
+  canvas.style.transform = `scale(${s})`;
+}
+
+// ── RENDER LISTE ──────────────────────────────────
+function renderListe() {
+  const el = document.getElementById('slide-liste');
+  el.innerHTML = '';
+  slides.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'sk' + (s.id === aktivId ? ' aktiv' : '');
+    d.onclick = () => velgSlide(s.id);
+    d.innerHTML = `
+      <div class="sk-thumb" style="background:${s.bg}">
+        ${s.bilde ? `<img class="sk-img" src="${s.bilde.dataUrl}">` : ''}
+        <div class="sk-overlay">
+          <div class="sk-t">${escH(s.tittel)||'(tom)'}</div>
+          <div class="sk-b">${escH(s.tekst)}</div>
+        </div>
+      </div>
+      <div class="sk-foot">
+        <span class="sk-nr">${i+1}</span>
+        <div class="sk-acts">
+          <button class="bik" title="Opp" onclick="event.stopPropagation();flyttSlide(${s.id},-1)">↑</button>
+          <button class="bik" title="Ned" onclick="event.stopPropagation();flyttSlide(${s.id},1)">↓</button>
+          <button class="bik slett" title="Slett" onclick="event.stopPropagation();slettSlide(${s.id})">✕</button>
+        </div>
+      </div>`;
+    el.appendChild(d);
   });
+  const idx = slides.findIndex(s => s.id === aktivId);
+  document.getElementById('slide-counter').textContent = `${idx+1} / ${slides.length}`;
+  document.getElementById('center-label').textContent = `Slide ${idx+1}`;
+}
+
+// ── RENDER CANVAS ─────────────────────────────────
+function renderCanvas() {
+  const s = slides.find(x => x.id === aktivId);
+  if (!s) return;
+  const canvas = document.getElementById('slide-canvas');
+  canvas.style.background = s.bg;
+  document.getElementById('canvas-tittel').textContent = s.tittel;
+  document.getElementById('canvas-tekst').textContent = s.tekst;
+
+  // Fragments
+  const fEl = document.getElementById('canvas-fragments');
+  const linjer = (s.fragments||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  fEl.innerHTML = linjer.length ? `<ul>${linjer.map(l=>`<li>${escH(l)}</li>`).join('')}</ul>` : '';
+  // Juster posisjon basert på om det er tekst
+  fEl.style.top = (s.tekst ? '62%' : '44%');
+
+  // Bilde
+  const bc = document.getElementById('bilde-container');
+  const bi = document.getElementById('canvas-bilde');
+  if (s.bilde) {
+    bc.style.display = 'block';
+    bi.src = s.bilde.dataUrl;
+    bc.style.left   = (s.bilde.x * CW) + 'px';
+    bc.style.top    = (s.bilde.y * CH) + 'px';
+    bc.style.width  = (s.bilde.w * CW) + 'px';
+    bc.style.height = (s.bilde.h * CH) + 'px';
+    bc.classList.toggle('valgt', bildeValgt);
+  } else {
+    bc.style.display = 'none';
+  }
+
+  // Video placeholder
+  const vEl = document.getElementById('canvas-video');
+  vEl.style.display = s.video ? 'block' : 'none';
+
+  oppdaterScale();
+}
+
+// ── RENDER EGENSKAPER ─────────────────────────────
+function renderEgenskaper() {
+  const s = slides.find(x => x.id === aktivId);
+  const el = document.getElementById('eg-innhold');
+  if (!s) { el.innerHTML = '<div class="ingen">Velg en slide</div>'; return; }
+
+  const vUrl = !s.video || s.video.type==='url' ? 'aktiv' : '';
+  const vFil = s.video && s.video.type==='fil' ? 'aktiv' : '';
+
+  const bildePos = s.bilde ? `
+    <div class="fg">
+      <label class="fl">Posisjon og størrelse</label>
+      <div class="pos-rad">
+        <div class="pos-felt"><div class="pos-label">X %</div><input class="pos-inp" type="number" min="0" max="100" value="${Math.round(s.bilde.x*100)}" oninput="oppdaterBildePos('x',+this.value/100)"></div>
+        <div class="pos-felt"><div class="pos-label">Y %</div><input class="pos-inp" type="number" min="0" max="100" value="${Math.round(s.bilde.y*100)}" oninput="oppdaterBildePos('y',+this.value/100)"></div>
+        <div class="pos-felt"><div class="pos-label">Bredde %</div><input class="pos-inp" type="number" min="5" max="100" value="${Math.round(s.bilde.w*100)}" oninput="oppdaterBildePos('w',+this.value/100)"></div>
+      </div>
+      <button style="height:24px;background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--dim);font-size:11px;cursor:pointer;margin-top:2px" onclick="fjernMedia('bilde')">Fjern bilde</button>
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="sek-tittel">Innhold</div>
+    <div class="fg"><label class="fl">Tittel</label>
+      <input class="fi" type="text" value="${escA(s.tittel)}" oninput="oppdater('tittel',this.value)"></div>
+    <div class="fg"><label class="fl">Brødtekst</label>
+      <textarea class="fi" rows="3" oninput="oppdater('tekst',this.value)">${escH(s.tekst)}</textarea></div>
+    <div class="fg"><label class="fl">Bakgrunnsfarge</label>
+      <div class="farge-rad">
+        <input class="fp" type="color" value="${s.bg}" oninput="oppdaterFarge(this.value)">
+        <input class="fhex" type="text" value="${s.bg}" maxlength="7" spellcheck="false" oninput="oppdaterFargeHex(this.value)">
+      </div></div>
+    <div class="divider"></div>
+    <div class="sek-tittel">Punktliste (fragments)</div>
+    <div class="fg"><label class="fl">Punkter <span class="fls">— én linje per punkt</span></label>
+      <textarea class="fi" rows="4" placeholder="Punkt én&#10;Punkt to&#10;Punkt tre" oninput="oppdater('fragments',this.value)">${escH(s.fragments)}</textarea></div>
+    <div class="divider"></div>
+    <div class="sek-tittel">Bilde</div>
+    <div class="fg">
+      <div class="fu-wrap"><div class="fu-btn">↑ ${s.bilde ? escH(s.bilde.navn) : 'Velg bildefil…'}
+        <input type="file" accept="image/*" onchange="lastOppBilde(this.files[0])"></div></div>
+      ${s.bilde ? `<div class="mprev"><img src="${s.bilde.dataUrl}"><button class="btn-fjern" onclick="fjernMedia('bilde')">✕</button></div>` : ''}
+      ${bildePos}
+    </div>
+    <div class="divider"></div>
+    <div class="sek-tittel">Video</div>
+    <div class="fg">
+      <div class="media-tabs">
+        <button class="mt ${vUrl}" onclick="byttVideoTab('url')">Lenke / URL</button>
+        <button class="mt ${vFil}" onclick="byttVideoTab('fil')">Fil</button>
+      </div>
+      <div id="video-innhold">${byggVideoInnhold(s)}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="sek-tittel">Speaker notes</div>
+    <div class="fg"><label class="fl">Notater <span class="fls">— S-tasten i presentasjon</span></label>
+      <textarea class="fi" rows="4" oninput="oppdater('notater',this.value)">${escH(s.notater)}</textarea></div>`;
+}
+
+function byggVideoInnhold(s) {
+  if (!s.video || s.video.type==='url') {
+    const v = (s.video && s.video.type==='url') ? escA(s.video.verdi||'') : '';
+    return `<input class="fi" type="url" placeholder="YouTube, Vimeo eller direktelenke…" value="${v}" oninput="oppdaterVideoUrl(this.value)">`;
+  }
+  const harFil = s.video?.dataUrl;
+  return `<div class="fu-wrap"><div class="fu-btn">↑ ${harFil ? escH(s.video.navn) : 'Velg videofil…'}
+    <input type="file" accept="video/*" onchange="lastOppVideo(this.files[0])"></div></div>
+    ${harFil ? `<div class="mprev"><video src="${s.video.dataUrl}"></video><button class="btn-fjern" onclick="fjernMedia('video')">✕</button></div>` : ''}`;
+}
+
+// ── OPPDATER ──────────────────────────────────────
+function oppdater(felt, verdi) {
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  s[felt] = verdi;
+  renderListe(); renderCanvas();
+  if (modus==='forhåndsvis') oppdaterPreview();
+}
+function oppdaterFarge(hex) {
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  s.bg = hex;
+  const h = document.querySelector('.fhex'); if (h) h.value = hex;
+  renderListe(); renderCanvas();
+}
+function oppdaterFargeHex(hex) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  s.bg = hex;
+  const p = document.querySelector('.fp'); if (p) p.value = hex;
+  renderListe(); renderCanvas();
+}
+function oppdaterVideoUrl(v) {
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  s.video = v.trim() ? {type:'url',verdi:v.trim()} : null;
+  renderCanvas(); renderListe();
+}
+function oppdaterBildePos(felt, verdi) {
+  const s = slides.find(x=>x.id===aktivId); if (!s||!s.bilde) return;
+  s.bilde[felt] = verdi;
+  // Beregn høyde fra aspect ratio ved breddeendring
+  if (felt==='w') {
+    const img = document.getElementById('canvas-bilde');
+    const ar = img.naturalWidth / img.naturalHeight || 1;
+    s.bilde.h = s.bilde.w / ar / (CW/CH);
+  }
+  renderCanvas();
+}
+
+// ── MEDIA ─────────────────────────────────────────
+function lastOppBilde(fil) {
+  if (!fil) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const s = slides.find(x=>x.id===aktivId); if (!s) return;
+    const img = new Image();
+    img.onload = () => {
+      const ar = img.width / img.height;
+      const w = 0.45;
+      const h = w / ar / (CW/CH);
+      s.bilde = { dataUrl:e.target.result, navn:fil.name, x:0.05, y:0.1, w, h };
+      renderListe(); renderEgenskaper(); renderCanvas();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(fil);
+}
+function lastOppVideo(fil) {
+  if (!fil) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const s = slides.find(x=>x.id===aktivId); if (!s) return;
+    s.video = {type:'fil', dataUrl:e.target.result, navn:fil.name};
+    renderEgenskaper(); renderCanvas();
+  };
+  reader.readAsDataURL(fil);
+}
+function fjernMedia(type) {
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  if (type==='bilde') s.bilde=null;
+  if (type==='video') s.video=null;
+  bildeValgt = false;
+  renderListe(); renderEgenskaper(); renderCanvas();
+}
+function byttVideoTab(type) {
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  s.video = {type};
+  document.querySelectorAll('.mt').forEach((b,i)=>{b.classList.toggle('aktiv',(i===0&&type==='url')||(i===1&&type==='fil'))});
+  document.getElementById('video-innhold').innerHTML = byggVideoInnhold(s);
+}
+
+// ── SLIDE ACTIONS ─────────────────────────────────
+function velgSlide(id) {
+  aktivId = id; bildeValgt = false;
+  renderListe(); renderEgenskaper(); renderCanvas();
+  if (modus==='forhåndsvis') oppdaterPreview();
+}
+function nySlide() {
+  const s = {id:neste_id++, tittel:'Ny slide', tekst:'', bg:'#1a1a2e', notater:'', fragments:'', bilde:null, video:null};
+  slides.push(s); aktivId = s.id; bildeValgt = false;
+  renderListe(); renderEgenskaper(); renderCanvas();
+}
+function slettSlide(id) {
+  if (slides.length<=1) return;
+  const idx = slides.findIndex(s=>s.id===id);
+  slides.splice(idx,1);
+  if (aktivId===id) aktivId = slides[Math.min(idx,slides.length-1)].id;
+  renderListe(); renderEgenskaper(); renderCanvas();
+}
+function flyttSlide(id, dir) {
+  const idx = slides.findIndex(s=>s.id===id), ny=idx+dir;
+  if (ny<0||ny>=slides.length) return;
+  [slides[idx],slides[ny]]=[slides[ny],slides[idx]];
+  renderListe(); renderCanvas();
+}
+function navSlide(dir) {
+  const idx = slides.findIndex(s=>s.id===aktivId);
+  const ny = idx+dir;
+  if (ny>=0&&ny<slides.length) velgSlide(slides[ny].id);
+}
+
+// ── DRAG & DROP FILER ─────────────────────────────
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('canvas-wrapper').classList.add('drag-over');
+  document.getElementById('drop-overlay').classList.add('vis');
+}
+function onDragLeave(e) {
+  if (!document.getElementById('canvas-wrapper').contains(e.relatedTarget)) {
+    document.getElementById('canvas-wrapper').classList.remove('drag-over');
+    document.getElementById('drop-overlay').classList.remove('vis');
+  }
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('canvas-wrapper').classList.remove('drag-over');
+  document.getElementById('drop-overlay').classList.remove('vis');
+  const fil = e.dataTransfer.files[0];
+  if (!fil) return;
+  if (fil.type.startsWith('image/')) lastOppBilde(fil);
+  else if (fil.type.startsWith('video/')) lastOppVideo(fil);
+}
+
+// ── CANVAS DRAG (bilde) ───────────────────────────
+const bc = document.getElementById('bilde-container');
+
+bc.addEventListener('mousedown', e => {
+  const s = slides.find(x=>x.id===aktivId);
+  if (!s||!s.bilde) return;
+  e.preventDefault(); e.stopPropagation();
+  bildeValgt = true;
+  bc.classList.add('valgt');
+
+  const dir = e.target.dataset.dir;
+  const scale = getScale();
+  const canvasEl = document.getElementById('slide-canvas');
+  const cr = canvasEl.getBoundingClientRect();
+
+  dragState = {
+    type: dir ? 'resize' : 'move',
+    dir,
+    startMX: e.clientX,
+    startMY: e.clientY,
+    startX: s.bilde.x,
+    startY: s.bilde.y,
+    startW: s.bilde.w,
+    startH: s.bilde.h,
+    scale,
+  };
+});
+
+document.addEventListener('mousemove', e => {
+  if (!dragState) return;
+  const s = slides.find(x=>x.id===aktivId);
+  if (!s||!s.bilde) return;
+
+  const dx = (e.clientX - dragState.startMX) / dragState.scale / CW;
+  const dy = (e.clientY - dragState.startMY) / dragState.scale / CH;
+
+  if (dragState.type==='move') {
+    s.bilde.x = Math.max(0, Math.min(1-s.bilde.w, dragState.startX + dx));
+    s.bilde.y = Math.max(0, Math.min(1-s.bilde.h, dragState.startY + dy));
+  } else {
+    const dir = dragState.dir;
+    let newW = dragState.startW;
+    let newX = dragState.startX;
+    let newY = dragState.startY;
+
+    if (dir==='se'||dir==='ne') newW = Math.max(0.05, dragState.startW + dx);
+    if (dir==='sw'||dir==='nw') { newW = Math.max(0.05, dragState.startW - dx); newX = dragState.startX + dx; }
+
+    const img = document.getElementById('canvas-bilde');
+    const ar = img.naturalWidth / img.naturalHeight || 1;
+    const newH = newW / ar / (CW/CH);
+
+    if (dir==='nw'||dir==='ne') newY = dragState.startY + dragState.startH - newH;
+
+    s.bilde.x = Math.max(0, newX);
+    s.bilde.y = Math.max(0, newY);
+    s.bilde.w = newW;
+    s.bilde.h = newH;
+  }
+
+  renderCanvas();
+  // Oppdater posisjonsfelt uten full re-render
+  const xI = document.querySelector('.pos-inp');
+  if (xI) {
+    const inputs = document.querySelectorAll('.pos-inp');
+    if (inputs[0]) inputs[0].value = Math.round(s.bilde.x*100);
+    if (inputs[1]) inputs[1].value = Math.round(s.bilde.y*100);
+    if (inputs[2]) inputs[2].value = Math.round(s.bilde.w*100);
+  }
+});
+
+document.addEventListener('mouseup', () => { dragState = null; });
+
+// Klikk utenfor bilde → fjern valg
+document.getElementById('slide-canvas').addEventListener('mousedown', e => {
+  if (!e.target.closest('#bilde-container')) {
+    bildeValgt = false;
+    bc.classList.remove('valgt');
+  }
+});
+
+// ── MODUS ─────────────────────────────────────────
+function byttModus(m) {
+  modus = m;
+  const cw = document.getElementById('canvas-wrapper');
+  const iframe = document.getElementById('preview-iframe');
+  document.getElementById('mode-rediger').classList.toggle('aktiv', m==='rediger');
+  document.getElementById('mode-preview').classList.toggle('aktiv', m==='forhåndsvis');
+  if (m==='rediger') {
+    cw.style.display='flex'; iframe.style.display='none';
+    renderCanvas();
+  } else {
+    cw.style.display='none'; iframe.style.display='block';
+    oppdaterPreview();
+  }
+}
+
+// ── PREVIEW ───────────────────────────────────────
+function byggSlideHtml(s, eksport=false) {
+  const frags = (s.fragments||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  return `<section data-background="${escA(s.bg)}">
+    ${s.tittel?`<h2 style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);text-transform:none">${escH(s.tittel)}</h2>`:''}
+    ${s.tekst?`<p style="color:rgba(255,255,255,.75);margin-top:.5rem">${escH(s.tekst)}</p>`:''}
+    ${s.bilde?`<img src="${s.bilde.dataUrl}" style="position:absolute;left:${(s.bilde.x*100).toFixed(1)}%;top:${(s.bilde.y*100).toFixed(1)}%;width:${(s.bilde.w*100).toFixed(1)}%;pointer-events:none">`:''}
+    ${s.video?byggVideoHtml(s.video,eksport):''}
+    ${frags.length?`<ul style="margin-top:1rem;text-align:left">${frags.map(f=>`<li class="fragment fade-up">${escH(f)}</li>`).join('')}</ul>`:''}
+    ${s.notater?`<aside class="notes">${escH(s.notater)}</aside>`:''}
+  </section>`;
+}
+
+function byggVideoHtml(v, eksport=false) {
+  if (!v) return '';
+  if (v.type==='url'&&v.verdi) {
+    const yt = ytId(v.verdi), vm = vmId(v.verdi);
+    if (yt) {
+      if (eksport) return `<iframe src="https://www.youtube-nocookie.com/embed/${yt}" width="560" height="315" frameborder="0" allow="autoplay;fullscreen" allowfullscreen style="margin-top:1rem;border-radius:8px;max-width:90%"></iframe>`;
+      return `<div style="position:relative;display:inline-block;margin-top:1rem;max-width:90%">
+        <img src="https://img.youtube.com/vi/${yt}/hqdefault.jpg" style="width:480px;max-width:100%;border-radius:8px;display:block">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          <div style="width:64px;height:64px;background:rgba(200,0,0,.9);border-radius:50%;display:flex;align-items:center;justify-content:center">
+            <div style="width:0;height:0;border-top:16px solid transparent;border-bottom:16px solid transparent;border-left:26px solid #fff;margin-left:5px"></div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);border-radius:0 0 8px 8px;padding:4px 8px;font-size:11px;color:rgba(255,255,255,.7)">YouTube — video spilles i eksportert fil</div>
+      </div>`;
+    }
+    if (vm) {
+      if (eksport) return `<iframe src="https://player.vimeo.com/video/${vm}" width="560" height="315" frameborder="0" allowfullscreen style="margin-top:1rem;border-radius:8px;max-width:90%"></iframe>`;
+      return `<div style="margin-top:1rem;width:480px;max-width:90%;height:270px;background:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;border:1px solid rgba(255,255,255,.2)">
+        <div style="font-size:32px">▶</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.7)">Vimeo — video spilles i eksportert fil</div>
+      </div>`;
+    }
+    return `<video src="${escA(v.verdi)}" controls style="max-width:80%;max-height:260px;border-radius:8px;margin-top:1rem"></video>`;
+  }
+  if (v.type==='fil'&&v.dataUrl) return `<video src="${v.dataUrl}" controls style="max-width:80%;max-height:260px;border-radius:8px;margin-top:1rem"></video>`;
+  return '';
+}
+
+function ytId(url) { const m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/); return m?m[1]:null; }
+function vmId(url) { const m=url.match(/vimeo\.com\/(\d+)/); return m?m[1]:null; }
+
+let pvTimeout = null;
+function oppdaterPreview() {
+  clearTimeout(pvTimeout);
+  pvTimeout = setTimeout(() => {
+    const iframe = document.getElementById('preview-iframe');
+    const idx = slides.findIndex(s=>s.id===aktivId);
+    const html = `<!doctype html><html><head>
+      <meta charset="utf-8">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
+      <style>body{margin:0}.reveal section{position:relative}.reveal h2,.reveal h3{text-transform:none}</style>
+    </head><body>
+      <div class="reveal"><div class="slides">${slides.map(byggSlideHtml).join('')}</div></div>
+      <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"><\/script>
+      <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"><\/script>
+      <script>Reveal.initialize({hash:false,controls:true,progress:false,transition:'slide',plugins:[RevealNotes]});
+      window.addEventListener('message',e=>{if(e.data&&e.data.type==='goto')Reveal.slide(e.data.idx)});<\/script>
+    </body></html>`;
+    // Bruk blob-URL i stedet for srcdoc – gir iframen en skikkelig origin slik at YouTube-embeds fungerer
+    const blob = new Blob([html], {type:'text/html'});
+    const oldUrl = iframe._blobUrl;
+    iframe._blobUrl = URL.createObjectURL(blob);
+    iframe.src = iframe._blobUrl;
+    if (oldUrl) URL.revokeObjectURL(oldUrl);
+    iframe.onload = () => setTimeout(()=>{ try{iframe.contentWindow.postMessage({type:'goto',idx},'*')}catch(e){} }, 700);
+  }, 150);
+}
+
+// ── IMPORTER HTML ─────────────────────────────────
+function importerHTML(fil) {
+  if (!fil) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(e.target.result, 'text/html');
+    const seksjoner = doc.querySelectorAll('.slides section');
+    if (!seksjoner.length) { alert('Fant ingen slides i filen.'); return; }
+
+    const importert = [];
+    seksjoner.forEach((sec, i) => {
+      const bg = sec.getAttribute('data-background') || '#1a1a2e';
+      const h = sec.querySelector('h1,h2,h3');
+      const p = sec.querySelector('p');
+      const notEl = sec.querySelector('aside.notes');
+      const frags = Array.from(sec.querySelectorAll('li.fragment')).map(li=>li.textContent.trim());
+      const imgEl = sec.querySelector('img');
+      const vidEl = sec.querySelector('video');
+      const ifrEl = sec.querySelector('iframe');
+
+      let bilde = null;
+      if (imgEl && imgEl.src) {
+        const style = imgEl.getAttribute('style')||'';
+        const lm = style.match(/left:([\d.]+)%/);
+        const tm = style.match(/top:([\d.]+)%/);
+        const wm = style.match(/width:([\d.]+)%/);
+        const x = lm ? +lm[1]/100 : 0.05;
+        const y = tm ? +tm[1]/100 : 0.1;
+        const w = wm ? +wm[1]/100 : 0.45;
+        bilde = { dataUrl:imgEl.src, navn:'importert.jpg', x, y, w, h:w*0.5 };
+      }
+
+      let video = null;
+      if (vidEl?.src) video = {type:'url', verdi:vidEl.src};
+      else if (ifrEl?.src) video = {type:'url', verdi:ifrEl.src};
+
+      importert.push({
+        id: neste_id++,
+        tittel: h ? h.textContent.trim() : `Slide ${i+1}`,
+        tekst: p ? p.textContent.trim() : '',
+        bg: /^#[0-9a-fA-F]{3,8}$/.test(bg) ? bg : '#1a1a2e',
+        notater: notEl ? notEl.textContent.trim() : '',
+        fragments: frags.join('\n'),
+        bilde, video,
+      });
+    });
+
+    if (confirm(`Importer ${importert.length} slides? Dette erstatter nåværende presentasjon.`)) {
+      slides = importert;
+      aktivId = slides[0].id;
+      renderListe(); renderEgenskaper(); renderCanvas();
+    }
+  };
+  reader.readAsText(fil);
+}
+
+// ── EKSPORTER ─────────────────────────────────────
+function eksporter() {
+  const html = `<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Presentasjon</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
+  <style>.reveal h1,.reveal h2,.reveal h3{text-transform:none}.reveal .slides section{position:relative}</style>
+</head>
+<body>
+  <div class="reveal"><div class="slides">
+    ${slides.map(s=>byggSlideHtml(s,true)).join('\n    ')}
+  </div></div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"><\/script>
+  <script>Reveal.initialize({hash:true,transition:'slide',plugins:[RevealNotes]});<\/script>
+</body>
+</html>`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download = 'presentasjon.html';
+  a.click();
+}
+
+// ── UTILS ─────────────────────────────────────────
+function escH(s=''){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escA(s=''){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
+// ── RESIZE OBSERVER ───────────────────────────────
+new ResizeObserver(oppdaterScale).observe(document.getElementById('canvas-wrapper'));
+
+// ── INIT ──────────────────────────────────────────
+renderListe(); renderEgenskaper(); renderCanvas();
 </script>
 </body>
 </html>
