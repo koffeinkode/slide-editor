@@ -529,7 +529,16 @@ function onDrop(e) {
 
 // ── BYGG HTML ─────────────────────────────────────
 function byggEnkelSection(s, eksport=false) {
-  if (s.htmlRaw) return s.htmlRaw;
+  if (s.htmlRaw) {
+    // Inject gjeldende bakgrunnsfarge uansett hva som ligger i rå HTML
+    let html = s.htmlRaw;
+    if (/data-background="[^"]*"/.test(html)) {
+      html = html.replace(/data-background="[^"]*"/, `data-background="${escA(s.bg)}"`);
+    } else {
+      html = html.replace(/^<section/, `<section data-background="${escA(s.bg)}"`);
+    }
+    return html;
+  }
   const frags = (s.fragments||'').split('\n').map(l=>l.trim()).filter(Boolean);
   return `<section data-background="${escA(s.bg)}">
     ${s.tittel?`<h2 style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);text-transform:none">${escH(s.tittel)}</h2>`:''}
