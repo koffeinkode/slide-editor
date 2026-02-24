@@ -225,7 +225,7 @@ function nullstill() {
   innstillinger = { friNavigasjon: false };
   document.getElementById('cb-fri-nav').checked = false;
   localStorage.removeItem(STORAGE_KEY);
-  renderListe(); renderEgenskaper(); oppdaterPreview();
+  renderListe(); renderEgenskaper(); renderOverlay(); oppdaterPreview();
 }
 
 // ── HELPERS ───────────────────────────────────────
@@ -510,7 +510,7 @@ function velgSlide(id) {
 function nySlide() {
   const s = {id:neste_id++, tittel:'Ny slide', tekst:'', bg:'#1a1a2e', notater:'', fragments:'', bilde:null, video:null, htmlRaw:null, undersider:[]};
   slides.push(s); aktivId = s.id;
-  renderListe(); renderEgenskaper(); oppdaterPreview();
+  renderListe(); renderEgenskaper(); renderOverlay(); oppdaterPreview();
 }
 function nyUnderSlide(parentId) {
   const parent = slides.find(s => s.id === parentId);
@@ -519,21 +519,21 @@ function nyUnderSlide(parentId) {
   const u = {id:neste_id++, tittel:'Ny underslide', tekst:'', bg:parent.bg, notater:'', fragments:'', bilde:null, video:null, htmlRaw:null};
   parent.undersider.push(u);
   aktivId = u.id;
-  renderListe(); renderEgenskaper(); oppdaterPreview();
+  renderListe(); renderEgenskaper(); renderOverlay(); oppdaterPreview();
 }
 function slettSlide(id) {
   const parent = finnParent(id);
   if (parent) {
     parent.undersider = parent.undersider.filter(u => u.id !== id);
     if (aktivId === id) aktivId = parent.id;
-    renderListe(); renderEgenskaper(); oppdaterPreview();
+    renderListe(); renderEgenskaper(); renderOverlay(); oppdaterPreview();
     return;
   }
   if (slides.length <= 1) return;
   const idx = slides.findIndex(s => s.id === id);
   slides.splice(idx, 1);
   if (aktivId === id) aktivId = slides[Math.min(idx, slides.length-1)].id;
-  renderListe(); renderEgenskaper(); oppdaterPreview();
+  renderListe(); renderEgenskaper(); renderOverlay(); oppdaterPreview();
 }
 function flyttSlide(id, dir) {
   const idx = slides.findIndex(s=>s.id===id), ny=idx+dir;
