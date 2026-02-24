@@ -802,12 +802,10 @@ function importerHTML(fil) {
     const styleEls = doc.querySelectorAll('head style');
     const importertStyles = Array.from(styleEls).map(el => el.textContent).join('\n');
 
-    if (confirm(`Importer ${importert.length} slides? Dette erstatter nåværende presentasjon.`)) {
-      slides = importert;
-      aktivId = slides[0].id;
-      presentationStyles = importertStyles;
-      renderListe(); renderEgenskaper(); oppdaterPreview();
-    }
+    slides = importert;
+    aktivId = slides[0].id;
+    presentationStyles = importertStyles;
+    renderListe(); renderEgenskaper(); renderOverlay(); oppdaterPreview();
   };
   reader.readAsText(fil);
 }
