@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reveal-test</title>
+  <link rel="stylesheet" href="node_modules/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="node_modules/reveal.js/dist/theme/black.css">
+  <!-- PDF print: åpne med ?print-pdf i URL, deretter Fil → Skriv ut i Chrome -->
+  <script>
+    if (window.location.search.includes('print-pdf')) {
+      document.write('<link rel="stylesheet" href="node_modules/reveal.js/plugin/highlight/monokai.css">');
+    }
+  </script>
+  <style>
+    .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+
+    .bilde-rad {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    .bilde-rad img {
+      border-radius: 12px;
+      width: 200px;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .kort-rad {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    .kort {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      width: 200px;
+    }
+    .kort h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+    .kort p  { margin: 0; font-size: 0.85rem; opacity: 0.75; }
+
+    .stor-tall {
+      font-size: 5rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #42affa;
+    }
+    .etikett {
+      font-size: 0.9rem;
+      opacity: 0.6;
+      margin-top: 0.25rem;
+    }
+
+    .profil {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      justify-content: center;
+    }
+    .profil img {
+      border-radius: 50%;
+      width: 140px;
+      height: 140px;
+      object-fit: cover;
+    }
+    .profil-tekst { text-align: left; }
+    .profil-tekst h2 { margin: 0 0 0.4rem; }
+    .profil-tekst p  { margin: 0; opacity: 0.7; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- 1. Tittel -->
+    <section data-auto-animate>
+      <h1 data-id="tittel" style="font-size:2.5rem">Reveal.js Demo</h1>
+      <p style="opacity:0.6">Auto-animate · Fragments · Bilder</p>
+      <aside class="notes">
+        Åpningsslide. Si hei til publikum og presenter deg selv.
+        Neste slide: tittelen animerer automatisk.
+      </aside>
+    </section>
+
+    <!-- 2. Tittel vokser -->
+    <section data-auto-animate>
+      <h1 data-id="tittel" style="font-size:5rem">Reveal.js Demo</h1>
+      <p style="opacity:0.4; font-size:0.85rem">Tittel animerer automatisk mellom slides</p>
+    </section>
+
+    <!-- 3. Liste med fragments -->
+    <section>
+      <h2>Fragments</h2>
+      <aside class="notes">
+        Trykk mellomrom for å avsløre hvert punkt ett om gangen.
+        Siste punkt strykes over – poeng: noe vi ikke gjør lenger.
+      </aside>
+      <p style="opacity:0.6; font-size:0.9rem">Trykk → for å avsløre hvert punkt</p>
+      <ul>
+        <li class="fragment fade-up">Første punkt dukker opp</li>
+        <li class="fragment fade-up">Deretter dette</li>
+        <li class="fragment fade-up">Og til slutt dette</li>
+        <li class="fragment highlight-blue">Dette <em>fremheves</em> i blått</li>
+        <li class="fragment strike">Dette strykes over</li>
+      </ul>
+    </section>
+
+    <!-- 4. Bilde starter lite -->
+    <section data-auto-animate>
+      <h2 data-id="bilde-tittel">Bildegalleri</h2>
+      <img data-id="hovbilde"
+           src="https://picsum.photos/seed/abc/600/350"
+           style="border-radius:12px; width:300px; margin-top:1rem">
+    </section>
+
+    <!-- 5. Bilde vokser, andre dukker opp -->
+    <section data-auto-animate>
+      <h2 data-id="bilde-tittel">Bildegalleri</h2>
+      <img data-id="hovbilde"
+           src="https://picsum.photos/seed/abc/600/350"
+           style="border-radius:12px; width:560px">
+      <div class="bilde-rad">
+        <img src="https://picsum.photos/seed/def/400/280" alt="">
+        <img src="https://picsum.photos/seed/ghi/400/280" alt="">
+        <img src="https://picsum.photos/seed/jkl/400/280" alt="">
+      </div>
+    </section>
+
+    <!-- 6. Statistikk med fragments -->
+    <section>
+      <h2>Nøkkeltall</h2>
+      <aside class="notes">
+        Tallene kommer ett om gangen. Ta en pause mellom hvert for effekt.
+        Enden er en vits – «uendelig kaffe» – publikum ler som regel her.
+      </aside>
+      <div class="kort-rad">
+        <div class="fragment fade-up kort">
+          <div class="stor-tall">42</div>
+          <div class="etikett">Prosjekter</div>
+        </div>
+        <div class="fragment fade-up kort">
+          <div class="stor-tall">8</div>
+          <div class="etikett">År erfaring</div>
+        </div>
+        <div class="fragment fade-up kort">
+          <div class="stor-tall">∞</div>
+          <div class="etikett">Kaffe</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Profil liten -->
+    <section data-auto-animate>
+      <div class="profil">
+        <img data-id="profilbilde"
+             src="https://picsum.photos/seed/portrett/300/300"
+             style="width:80px; height:80px">
+        <div class="profil-tekst">
+          <h2 data-id="profilnavn" style="font-size:1.2rem">Ola Nordmann</h2>
+          <p>Designer & utvikler</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Profil vokser -->
+    <section data-auto-animate>
+      <div class="profil">
+        <img data-id="profilbilde"
+             src="https://picsum.photos/seed/portrett/300/300"
+             style="width:160px; height:160px">
+        <div class="profil-tekst">
+          <h2 data-id="profilnavn" style="font-size:2rem">Ola Nordmann</h2>
+          <p>Designer & utvikler</p>
+          <p class="fragment fade-up" style="margin-top:0.5rem; color:#42affa">
+            hei@example.com
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Bakgrunnsbilde -->
+    <section data-background="https://picsum.photos/seed/landskap/1280/720"
+             data-background-opacity="0.4">
+      <h2 style="font-size:3rem">Bildebakgrunn</h2>
+      <p class="fragment">Med justerbar opacity</p>
+    </section>
+
+    <!-- 10. Avslutning med auto-animate -->
+    <section data-auto-animate>
+      <h2 data-id="slutt">Det var det!</h2>
+    </section>
+
+    <section data-auto-animate>
+      <h2 data-id="slutt" style="font-size:4rem; color:#42affa">Det var det!</h2>
+      <p class="fragment fade-up">Trykk <kbd>S</kbd> for foredragsholder-notater</p>
+      <p class="fragment fade-up">Trykk <kbd>F</kbd> for fullskjerm</p>
+      <p class="fragment fade-up">Legg til <code>?print-pdf</code> i URL for PDF-eksport</p>
+      <aside class="notes">
+        Her kan du skrive notater som bare vises i speaker view.
+        Åpnes med S-tasten.
+      </aside>
+    </section>
+
+  </div>
+</div>
+
+<script src="node_modules/reveal.js/dist/reveal.js"></script>
+<script src="node_modules/reveal.js/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    transition: 'slide',
+    autoAnimateDuration: 0.8,
+    autoAnimateEasing: 'ease-in-out',
+    plugins: [ RevealNotes ],
+  });
+</script>
+</body>
+</html>
