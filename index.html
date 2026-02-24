@@ -165,8 +165,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 // ── DATA ──────────────────────────────────────────
 let neste_id = 3;
 let slides = [
-  { id:1, tittel:'Tittel på presentasjonen', tekst:'Undertittel eller ingress', bg:'#1a1a2e', notater:'Åpningsslide – si hei.', fragments:'', bilde:null, video:null },
-  { id:2, tittel:'Neste punkt', tekst:'Klikk på en slide for å redigere', bg:'#16213e', notater:'', fragments:'Punkt én\nPunkt to\nPunkt tre', bilde:null, video:null },
+  { id:1, tittel:'Tittel på presentasjonen', tekst:'Undertittel eller ingress', bg:'#1a1a2e', notater:'Åpningsslide – si hei.', fragments:'', bilde:null, video:null, htmlRaw:null },
+  { id:2, tittel:'Neste punkt', tekst:'Klikk på en slide for å redigere', bg:'#16213e', notater:'', fragments:'Punkt én\nPunkt to\nPunkt tre', bilde:null, video:null, htmlRaw:null },
 ];
 let aktivId = 1;
 
@@ -256,7 +256,17 @@ function renderEgenskaper() {
     <div class="divider"></div>
     <div class="sek-tittel">Speaker notes</div>
     <div class="fg"><label class="fl">Notater <span class="fls">— S-tasten i presentasjon</span></label>
-      <textarea class="fi" rows="4" oninput="oppdater('notater',this.value)">${escH(s.notater)}</textarea></div>`;
+      <textarea class="fi" rows="4" oninput="oppdater('notater',this.value)">${escH(s.notater)}</textarea></div>
+    <div class="divider"></div>
+    <div class="sek-tittel">Custom HTML ${s.htmlRaw ? '<span style="color:#f97316;font-weight:700">⚠ aktiv</span>' : ''}</div>
+    <div class="fg">
+      ${s.htmlRaw
+        ? '<div style="font-size:10px;color:#f97316;padding:2px 0 4px">Rå HTML er aktiv – strukturerte felt ovenfor ignoreres i preview og eksport.</div>'
+        : '<div style="font-size:10px;color:var(--dim);padding:2px 0 4px">Lim inn en komplett &lt;section&gt;…&lt;/section&gt; for å overstyre alle felt.</div>'
+      }
+      <textarea class="fi" rows="8" style="font-family:monospace;font-size:11px;resize:vertical" placeholder="&lt;section data-background=&quot;#1a1a2e&quot;&gt;&#10;  …&#10;&lt;/section&gt;" oninput="oppdaterRawHtml(this.value)">${escH(s.htmlRaw||'')}</textarea>
+      ${s.htmlRaw ? `<button style="height:24px;background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--dim);font-size:11px;cursor:pointer;margin-top:2px" onclick="fjernRawHtml()">↩ Tilbake til strukturert modus</button>` : ''}
+    </div>`;
 }
 
 function byggVideoInnhold(s) {
@@ -347,7 +357,7 @@ function velgSlide(id) {
   renderListe(); renderEgenskaper(); oppdaterPreview();
 }
 function nySlide() {
-  const s = {id:neste_id++, tittel:'Ny slide', tekst:'', bg:'#1a1a2e', notater:'', fragments:'', bilde:null, video:null};
+  const s = {id:neste_id++, tittel:'Ny slide', tekst:'', bg:'#1a1a2e', notater:'', fragments:'', bilde:null, video:null, htmlRaw:null};
   slides.push(s); aktivId = s.id;
   renderListe(); renderEgenskaper(); oppdaterPreview();
 }
@@ -391,6 +401,7 @@ function onDrop(e) {
 
 // ── PREVIEW ───────────────────────────────────────
 function byggSlideHtml(s, eksport=false) {
+  if (s.htmlRaw) return s.htmlRaw;
   const frags = (s.fragments||'').split('\n').map(l=>l.trim()).filter(Boolean);
   return `<section data-background="${escA(s.bg)}">
     ${s.tittel?`<h2 style="color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);text-transform:none">${escH(s.tittel)}</h2>`:''}
@@ -400,6 +411,17 @@ function byggSlideHtml(s, eksport=false) {
     ${frags.length?`<ul style="margin-top:1rem;text-align:left">${frags.map(f=>`<li class="fragment fade-up">${escH(f)}</li>`).join('')}</ul>`:''}
     ${s.notater?`<aside class="notes">${escH(s.notater)}</aside>`:''}
   </section>`;
+}
+
+function fjernRawHtml() {
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  s.htmlRaw = null;
+  renderEgenskaper(); oppdaterPreview();
+}
+function oppdaterRawHtml(verdi) {
+  const s = slides.find(x=>x.id===aktivId); if (!s) return;
+  s.htmlRaw = verdi.trim() || null;
+  oppdaterPreview();
 }
 
 function byggVideoHtml(v, eksport=false) {
@@ -506,6 +528,7 @@ function importerHTML(fil) {
         notater: notEl ? notEl.textContent.trim() : '',
         fragments: frags.join('\n'),
         bilde, video,
+        htmlRaw: sec.outerHTML,
       });
     });
 
