@@ -122,6 +122,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
     ↑ Importer HTML
     <input type="file" accept=".html" onchange="importerHTML(this.files[0])">
   </div>
+  <button class="tb-btn" onclick="nullstill()" style="color:var(--danger);border-color:var(--danger)">↺ Nullstill</button>
   <div class="tb-space"></div>
   <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);cursor:pointer;user-select:none">
     <input type="checkbox" id="cb-fri-nav" onchange="toggleFriNav(this.checked)" style="accent-color:var(--accent);cursor:pointer">
@@ -172,14 +173,52 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 
 <script>
 // ── DATA ──────────────────────────────────────────
+const STORAGE_KEY = 'slide-editor-v1';
+
+function standardSlides() {
+  return [
+    { id:1, tittel:'Tittel på presentasjonen', tekst:'Undertittel eller ingress', bg:'#1a1a2e', notater:'Åpningsslide – si hei.', fragments:'', bilde:null, video:null, htmlRaw:null, undersider:[] },
+    { id:2, tittel:'Neste punkt', tekst:'Klikk på en slide for å redigere', bg:'#16213e', notater:'', fragments:'Punkt én\nPunkt to\nPunkt tre', bilde:null, video:null, htmlRaw:null, undersider:[] },
+  ];
+}
+
 let neste_id = 3;
-let slides = [
-  { id:1, tittel:'Tittel på presentasjonen', tekst:'Undertittel eller ingress', bg:'#1a1a2e', notater:'Åpningsslide – si hei.', fragments:'', bilde:null, video:null, htmlRaw:null, undersider:[] },
-  { id:2, tittel:'Neste punkt', tekst:'Klikk på en slide for å redigere', bg:'#16213e', notater:'', fragments:'Punkt én\nPunkt to\nPunkt tre', bilde:null, video:null, htmlRaw:null, undersider:[] },
-];
+let slides = standardSlides();
 let aktivId = 1;
 let presentationStyles = '';
 let innstillinger = { friNavigasjon: false };
+
+// ── STORAGE ───────────────────────────────────────
+function lagreTilStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ slides, aktivId, neste_id, presentationStyles, innstillinger }));
+  } catch(e) {}
+}
+
+function lastFraStorage() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!data || !Array.isArray(data.slides) || !data.slides.length) return false;
+    slides = data.slides;
+    aktivId = data.aktivId || data.slides[0].id;
+    neste_id = data.neste_id || (Math.max(...data.slides.map(s => s.id)) + 1);
+    presentationStyles = data.presentationStyles || '';
+    innstillinger = data.innstillinger || { friNavigasjon: false };
+    return true;
+  } catch(e) { return false; }
+}
+
+function nullstill() {
+  if (!confirm('Er du sikker? Alle slides slettes og du starter på nytt.')) return;
+  slides = standardSlides();
+  neste_id = 3;
+  aktivId = 1;
+  presentationStyles = '';
+  innstillinger = { friNavigasjon: false };
+  document.getElementById('cb-fri-nav').checked = false;
+  localStorage.removeItem(STORAGE_KEY);
+  renderListe(); renderEgenskaper(); oppdaterPreview();
+}
 
 // ── HELPERS ───────────────────────────────────────
 function finnSlide(id) {
@@ -598,6 +637,7 @@ let pvTimeout = null;
 function oppdaterPreview() {
   clearTimeout(pvTimeout);
   pvTimeout = setTimeout(() => {
+    lagreTilStorage();
     const iframe = document.getElementById('preview-iframe');
     const { h, v } = getSlideIndices(aktivId);
     const html = `<!doctype html><html><head>
@@ -738,6 +778,9 @@ function escH(s=''){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function escA(s=''){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
 // ── INIT ──────────────────────────────────────────
+if (lastFraStorage()) {
+  document.getElementById('cb-fri-nav').checked = innstillinger.friNavigasjon;
+}
 renderListe(); renderEgenskaper(); oppdaterPreview();
 </script>
 </body>
