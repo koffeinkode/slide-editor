@@ -53,50 +53,21 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .bik.slett:hover{color:var(--danger)}
 
 /* CENTER PANEL */
-.panel-center{background:#181818;display:flex;flex-direction:column;overflow:hidden}
+.panel-center{background:#181818;display:flex;flex-direction:column;overflow:hidden;position:relative}
 .center-bar{height:32px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:8px;flex-shrink:0}
 .center-bar-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 .center-bar-space{flex:1}
-.mode-toggle{display:flex;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.mode-btn{height:22px;padding:0 10px;background:var(--p2);color:var(--dim);border:none;font-size:11px;cursor:pointer;transition:background .1s,color .1s}
-.mode-btn.aktiv{background:var(--accent);color:#fff}
 .nav-btns{display:flex;gap:3px}
 .nav-btn{width:24px;height:22px;background:var(--p2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s}
 .nav-btn:hover{background:#3e3e42}
 .slide-counter{font-size:11px;color:var(--dim)}
 
-/* CANVAS EDITOR */
-.canvas-wrapper{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px;position:relative}
-.canvas-wrapper.drag-over{background:rgba(0,120,212,.08)}
-.drop-overlay{display:none;position:absolute;inset:0;background:rgba(0,120,212,.15);border:2px dashed var(--accent);border-radius:8px;z-index:100;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:var(--accent);pointer-events:none}
+/* DROP OVERLAY */
+.drop-overlay{display:none;position:absolute;inset:32px 0 0;background:rgba(0,120,212,.15);border:2px dashed var(--accent);z-index:100;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:var(--accent);pointer-events:none}
 .drop-overlay.vis{display:flex}
 
-#slide-canvas{
-  width:960px;height:540px;
-  position:relative;overflow:hidden;border-radius:6px;
-  box-shadow:0 8px 40px rgba(0,0,0,.6);
-  cursor:default;transform-origin:center center;
-}
-
-.canvas-tittel{position:absolute;left:5%;right:5%;top:12%;font-size:42px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);line-height:1.15;pointer-events:none;word-break:break-word}
-.canvas-tekst{position:absolute;left:5%;right:5%;top:42%;font-size:22px;color:rgba(255,255,255,.75);pointer-events:none;word-break:break-word;line-height:1.5}
-.canvas-fragments{position:absolute;left:5%;right:5%;bottom:8%;font-size:18px;color:rgba(255,255,255,.7);pointer-events:none}
-.canvas-fragments li{margin-top:.3em;list-style:disc;margin-left:1.2em;opacity:.7}
-.canvas-video-ph{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:12px 24px;font-size:14px;color:rgba(255,255,255,.7);pointer-events:none}
-
-/* DRAGGABLE IMAGE */
-.bilde-container{position:absolute;cursor:move;touch-action:none}
-.bilde-container img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;border-radius:4px}
-.bilde-container.valgt{outline:2px solid var(--accent);outline-offset:1px}
-.bilde-container.valgt .resize-se,.bilde-container.valgt .resize-sw,.bilde-container.valgt .resize-ne,.bilde-container.valgt .resize-nw{display:block}
-.resize-se,.resize-sw,.resize-ne,.resize-nw{display:none;position:absolute;width:12px;height:12px;background:var(--accent);border:2px solid #fff;border-radius:2px}
-.resize-se{bottom:-6px;right:-6px;cursor:se-resize}
-.resize-sw{bottom:-6px;left:-6px;cursor:sw-resize}
-.resize-ne{top:-6px;right:-6px;cursor:ne-resize}
-.resize-nw{top:-6px;left:-6px;cursor:nw-resize}
-
-/* IFRAME PREVIEW */
-#preview-iframe{flex:1;width:100%;border:none;display:none}
+/* IFRAME */
+#preview-iframe{flex:1;width:100%;border:none;display:block}
 
 /* RIGHT PANEL */
 .panel-egenskaper{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
@@ -163,7 +134,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
   </aside>
 
   <!-- CENTER -->
-  <main class="panel-center">
+  <main class="panel-center"
+    ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
     <div class="center-bar">
       <span class="center-bar-label" id="center-label">Slide 1</span>
       <div class="center-bar-space"></div>
@@ -172,28 +144,8 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
         <button class="nav-btn" onclick="navSlide(-1)">←</button>
         <button class="nav-btn" onclick="navSlide(1)">→</button>
       </div>
-      <div class="mode-toggle">
-        <button class="mode-btn aktiv" id="mode-rediger" onclick="byttModus('rediger')">Rediger</button>
-        <button class="mode-btn" id="mode-preview" onclick="byttModus('forhåndsvis')">Forhåndsvis</button>
-      </div>
     </div>
-    <div class="canvas-wrapper" id="canvas-wrapper"
-      ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-      <div class="drop-overlay" id="drop-overlay">Slipp bilde eller video her</div>
-      <div id="slide-canvas">
-        <div class="canvas-tittel" id="canvas-tittel"></div>
-        <div class="canvas-tekst" id="canvas-tekst"></div>
-        <div class="canvas-fragments" id="canvas-fragments"></div>
-        <div class="canvas-video-ph" id="canvas-video" style="display:none">▶ Video</div>
-        <div class="bilde-container" id="bilde-container" style="display:none">
-          <img id="canvas-bilde" draggable="false" alt="">
-          <div class="resize-nw" data-dir="nw"></div>
-          <div class="resize-ne" data-dir="ne"></div>
-          <div class="resize-sw" data-dir="sw"></div>
-          <div class="resize-se" data-dir="se"></div>
-        </div>
-      </div>
-    </div>
+    <div class="drop-overlay" id="drop-overlay">Slipp bilde eller video her</div>
     <iframe id="preview-iframe" allow="autoplay; fullscreen"></iframe>
   </main>
 
@@ -210,9 +162,6 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 </div>
 
 <script>
-// ── KONSTANTER ────────────────────────────────────
-const CW = 960, CH = 540;
-
 // ── DATA ──────────────────────────────────────────
 let neste_id = 3;
 let slides = [
@@ -220,24 +169,6 @@ let slides = [
   { id:2, tittel:'Neste punkt', tekst:'Klikk på en slide for å redigere', bg:'#16213e', notater:'', fragments:'Punkt én\nPunkt to\nPunkt tre', bilde:null, video:null },
 ];
 let aktivId = 1;
-let modus = 'rediger'; // 'rediger' | 'forhåndsvis'
-
-// ── DRAG STATE ─────────────────────────────────────
-let dragState = null; // { type:'move'|'resize', dir, startMX,startMY, startX,startY,startW,startH }
-let bildeValgt = false;
-
-// ── SCALE ─────────────────────────────────────────
-function getScale() {
-  const w = document.getElementById('canvas-wrapper');
-  const p = 32;
-  return Math.min((w.clientWidth - p*2) / CW, (w.clientHeight - p*2) / CH);
-}
-
-function oppdaterScale() {
-  const canvas = document.getElementById('slide-canvas');
-  const s = getScale();
-  canvas.style.transform = `scale(${s})`;
-}
 
 // ── RENDER LISTE ──────────────────────────────────
 function renderListe() {
@@ -268,44 +199,6 @@ function renderListe() {
   const idx = slides.findIndex(s => s.id === aktivId);
   document.getElementById('slide-counter').textContent = `${idx+1} / ${slides.length}`;
   document.getElementById('center-label').textContent = `Slide ${idx+1}`;
-}
-
-// ── RENDER CANVAS ─────────────────────────────────
-function renderCanvas() {
-  const s = slides.find(x => x.id === aktivId);
-  if (!s) return;
-  const canvas = document.getElementById('slide-canvas');
-  canvas.style.background = s.bg;
-  document.getElementById('canvas-tittel').textContent = s.tittel;
-  document.getElementById('canvas-tekst').textContent = s.tekst;
-
-  // Fragments
-  const fEl = document.getElementById('canvas-fragments');
-  const linjer = (s.fragments||'').split('\n').map(l=>l.trim()).filter(Boolean);
-  fEl.innerHTML = linjer.length ? `<ul>${linjer.map(l=>`<li>${escH(l)}</li>`).join('')}</ul>` : '';
-  // Juster posisjon basert på om det er tekst
-  fEl.style.top = (s.tekst ? '62%' : '44%');
-
-  // Bilde
-  const bc = document.getElementById('bilde-container');
-  const bi = document.getElementById('canvas-bilde');
-  if (s.bilde) {
-    bc.style.display = 'block';
-    bi.src = s.bilde.dataUrl;
-    bc.style.left   = (s.bilde.x * CW) + 'px';
-    bc.style.top    = (s.bilde.y * CH) + 'px';
-    bc.style.width  = (s.bilde.w * CW) + 'px';
-    bc.style.height = (s.bilde.h * CH) + 'px';
-    bc.classList.toggle('valgt', bildeValgt);
-  } else {
-    bc.style.display = 'none';
-  }
-
-  // Video placeholder
-  const vEl = document.getElementById('canvas-video');
-  vEl.style.display = s.video ? 'block' : 'none';
-
-  oppdaterScale();
 }
 
 // ── RENDER EGENSKAPER ─────────────────────────────
@@ -381,37 +274,30 @@ function byggVideoInnhold(s) {
 function oppdater(felt, verdi) {
   const s = slides.find(x=>x.id===aktivId); if (!s) return;
   s[felt] = verdi;
-  renderListe(); renderCanvas();
-  if (modus==='forhåndsvis') oppdaterPreview();
+  renderListe(); oppdaterPreview();
 }
 function oppdaterFarge(hex) {
   const s = slides.find(x=>x.id===aktivId); if (!s) return;
   s.bg = hex;
   const h = document.querySelector('.fhex'); if (h) h.value = hex;
-  renderListe(); renderCanvas();
+  renderListe(); oppdaterPreview();
 }
 function oppdaterFargeHex(hex) {
   if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
   const s = slides.find(x=>x.id===aktivId); if (!s) return;
   s.bg = hex;
   const p = document.querySelector('.fp'); if (p) p.value = hex;
-  renderListe(); renderCanvas();
+  renderListe(); oppdaterPreview();
 }
 function oppdaterVideoUrl(v) {
   const s = slides.find(x=>x.id===aktivId); if (!s) return;
   s.video = v.trim() ? {type:'url',verdi:v.trim()} : null;
-  renderCanvas(); renderListe();
+  renderListe(); oppdaterPreview();
 }
 function oppdaterBildePos(felt, verdi) {
   const s = slides.find(x=>x.id===aktivId); if (!s||!s.bilde) return;
   s.bilde[felt] = verdi;
-  // Beregn høyde fra aspect ratio ved breddeendring
-  if (felt==='w') {
-    const img = document.getElementById('canvas-bilde');
-    const ar = img.naturalWidth / img.naturalHeight || 1;
-    s.bilde.h = s.bilde.w / ar / (CW/CH);
-  }
-  renderCanvas();
+  oppdaterPreview();
 }
 
 // ── MEDIA ─────────────────────────────────────────
@@ -424,9 +310,9 @@ function lastOppBilde(fil) {
     img.onload = () => {
       const ar = img.width / img.height;
       const w = 0.45;
-      const h = w / ar / (CW/CH);
+      const h = w / ar / (960/540);
       s.bilde = { dataUrl:e.target.result, navn:fil.name, x:0.05, y:0.1, w, h };
-      renderListe(); renderEgenskaper(); renderCanvas();
+      renderListe(); renderEgenskaper(); oppdaterPreview();
     };
     img.src = e.target.result;
   };
@@ -438,7 +324,7 @@ function lastOppVideo(fil) {
   reader.onload = e => {
     const s = slides.find(x=>x.id===aktivId); if (!s) return;
     s.video = {type:'fil', dataUrl:e.target.result, navn:fil.name};
-    renderEgenskaper(); renderCanvas();
+    renderEgenskaper(); oppdaterPreview();
   };
   reader.readAsDataURL(fil);
 }
@@ -446,8 +332,7 @@ function fjernMedia(type) {
   const s = slides.find(x=>x.id===aktivId); if (!s) return;
   if (type==='bilde') s.bilde=null;
   if (type==='video') s.video=null;
-  bildeValgt = false;
-  renderListe(); renderEgenskaper(); renderCanvas();
+  renderListe(); renderEgenskaper(); oppdaterPreview();
 }
 function byttVideoTab(type) {
   const s = slides.find(x=>x.id===aktivId); if (!s) return;
@@ -458,27 +343,26 @@ function byttVideoTab(type) {
 
 // ── SLIDE ACTIONS ─────────────────────────────────
 function velgSlide(id) {
-  aktivId = id; bildeValgt = false;
-  renderListe(); renderEgenskaper(); renderCanvas();
-  if (modus==='forhåndsvis') oppdaterPreview();
+  aktivId = id;
+  renderListe(); renderEgenskaper(); oppdaterPreview();
 }
 function nySlide() {
   const s = {id:neste_id++, tittel:'Ny slide', tekst:'', bg:'#1a1a2e', notater:'', fragments:'', bilde:null, video:null};
-  slides.push(s); aktivId = s.id; bildeValgt = false;
-  renderListe(); renderEgenskaper(); renderCanvas();
+  slides.push(s); aktivId = s.id;
+  renderListe(); renderEgenskaper(); oppdaterPreview();
 }
 function slettSlide(id) {
   if (slides.length<=1) return;
   const idx = slides.findIndex(s=>s.id===id);
   slides.splice(idx,1);
   if (aktivId===id) aktivId = slides[Math.min(idx,slides.length-1)].id;
-  renderListe(); renderEgenskaper(); renderCanvas();
+  renderListe(); renderEgenskaper(); oppdaterPreview();
 }
 function flyttSlide(id, dir) {
   const idx = slides.findIndex(s=>s.id===id), ny=idx+dir;
   if (ny<0||ny>=slides.length) return;
   [slides[idx],slides[ny]]=[slides[ny],slides[idx]];
-  renderListe(); renderCanvas();
+  renderListe(); oppdaterPreview();
 }
 function navSlide(dir) {
   const idx = slides.findIndex(s=>s.id===aktivId);
@@ -489,120 +373,20 @@ function navSlide(dir) {
 // ── DRAG & DROP FILER ─────────────────────────────
 function onDragOver(e) {
   e.preventDefault();
-  document.getElementById('canvas-wrapper').classList.add('drag-over');
   document.getElementById('drop-overlay').classList.add('vis');
 }
 function onDragLeave(e) {
-  if (!document.getElementById('canvas-wrapper').contains(e.relatedTarget)) {
-    document.getElementById('canvas-wrapper').classList.remove('drag-over');
+  if (!document.querySelector('.panel-center').contains(e.relatedTarget)) {
     document.getElementById('drop-overlay').classList.remove('vis');
   }
 }
 function onDrop(e) {
   e.preventDefault();
-  document.getElementById('canvas-wrapper').classList.remove('drag-over');
   document.getElementById('drop-overlay').classList.remove('vis');
   const fil = e.dataTransfer.files[0];
   if (!fil) return;
   if (fil.type.startsWith('image/')) lastOppBilde(fil);
   else if (fil.type.startsWith('video/')) lastOppVideo(fil);
-}
-
-// ── CANVAS DRAG (bilde) ───────────────────────────
-const bc = document.getElementById('bilde-container');
-
-bc.addEventListener('mousedown', e => {
-  const s = slides.find(x=>x.id===aktivId);
-  if (!s||!s.bilde) return;
-  e.preventDefault(); e.stopPropagation();
-  bildeValgt = true;
-  bc.classList.add('valgt');
-
-  const dir = e.target.dataset.dir;
-  const scale = getScale();
-  const canvasEl = document.getElementById('slide-canvas');
-  const cr = canvasEl.getBoundingClientRect();
-
-  dragState = {
-    type: dir ? 'resize' : 'move',
-    dir,
-    startMX: e.clientX,
-    startMY: e.clientY,
-    startX: s.bilde.x,
-    startY: s.bilde.y,
-    startW: s.bilde.w,
-    startH: s.bilde.h,
-    scale,
-  };
-});
-
-document.addEventListener('mousemove', e => {
-  if (!dragState) return;
-  const s = slides.find(x=>x.id===aktivId);
-  if (!s||!s.bilde) return;
-
-  const dx = (e.clientX - dragState.startMX) / dragState.scale / CW;
-  const dy = (e.clientY - dragState.startMY) / dragState.scale / CH;
-
-  if (dragState.type==='move') {
-    s.bilde.x = Math.max(0, Math.min(1-s.bilde.w, dragState.startX + dx));
-    s.bilde.y = Math.max(0, Math.min(1-s.bilde.h, dragState.startY + dy));
-  } else {
-    const dir = dragState.dir;
-    let newW = dragState.startW;
-    let newX = dragState.startX;
-    let newY = dragState.startY;
-
-    if (dir==='se'||dir==='ne') newW = Math.max(0.05, dragState.startW + dx);
-    if (dir==='sw'||dir==='nw') { newW = Math.max(0.05, dragState.startW - dx); newX = dragState.startX + dx; }
-
-    const img = document.getElementById('canvas-bilde');
-    const ar = img.naturalWidth / img.naturalHeight || 1;
-    const newH = newW / ar / (CW/CH);
-
-    if (dir==='nw'||dir==='ne') newY = dragState.startY + dragState.startH - newH;
-
-    s.bilde.x = Math.max(0, newX);
-    s.bilde.y = Math.max(0, newY);
-    s.bilde.w = newW;
-    s.bilde.h = newH;
-  }
-
-  renderCanvas();
-  // Oppdater posisjonsfelt uten full re-render
-  const xI = document.querySelector('.pos-inp');
-  if (xI) {
-    const inputs = document.querySelectorAll('.pos-inp');
-    if (inputs[0]) inputs[0].value = Math.round(s.bilde.x*100);
-    if (inputs[1]) inputs[1].value = Math.round(s.bilde.y*100);
-    if (inputs[2]) inputs[2].value = Math.round(s.bilde.w*100);
-  }
-});
-
-document.addEventListener('mouseup', () => { dragState = null; });
-
-// Klikk utenfor bilde → fjern valg
-document.getElementById('slide-canvas').addEventListener('mousedown', e => {
-  if (!e.target.closest('#bilde-container')) {
-    bildeValgt = false;
-    bc.classList.remove('valgt');
-  }
-});
-
-// ── MODUS ─────────────────────────────────────────
-function byttModus(m) {
-  modus = m;
-  const cw = document.getElementById('canvas-wrapper');
-  const iframe = document.getElementById('preview-iframe');
-  document.getElementById('mode-rediger').classList.toggle('aktiv', m==='rediger');
-  document.getElementById('mode-preview').classList.toggle('aktiv', m==='forhåndsvis');
-  if (m==='rediger') {
-    cw.style.display='flex'; iframe.style.display='none';
-    renderCanvas();
-  } else {
-    cw.style.display='none'; iframe.style.display='block';
-    oppdaterPreview();
-  }
 }
 
 // ── PREVIEW ───────────────────────────────────────
@@ -662,13 +446,12 @@ function oppdaterPreview() {
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
       <style>body{margin:0}.reveal section{position:relative}.reveal h2,.reveal h3{text-transform:none}</style>
     </head><body>
-      <div class="reveal"><div class="slides">${slides.map(byggSlideHtml).join('')}</div></div>
+      <div class="reveal"><div class="slides">${slides.map(s=>byggSlideHtml(s,false)).join('')}</div></div>
       <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"><\/script>
       <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"><\/script>
       <script>Reveal.initialize({hash:false,controls:true,progress:false,transition:'slide',plugins:[RevealNotes]});
       window.addEventListener('message',e=>{if(e.data&&e.data.type==='goto')Reveal.slide(e.data.idx)});<\/script>
     </body></html>`;
-    // Bruk blob-URL i stedet for srcdoc – gir iframen en skikkelig origin slik at YouTube-embeds fungerer
     const blob = new Blob([html], {type:'text/html'});
     const oldUrl = iframe._blobUrl;
     iframe._blobUrl = URL.createObjectURL(blob);
@@ -729,7 +512,7 @@ function importerHTML(fil) {
     if (confirm(`Importer ${importert.length} slides? Dette erstatter nåværende presentasjon.`)) {
       slides = importert;
       aktivId = slides[0].id;
-      renderListe(); renderEgenskaper(); renderCanvas();
+      renderListe(); renderEgenskaper(); oppdaterPreview();
     }
   };
   reader.readAsText(fil);
@@ -766,11 +549,8 @@ function eksporter() {
 function escH(s=''){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function escA(s=''){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 
-// ── RESIZE OBSERVER ───────────────────────────────
-new ResizeObserver(oppdaterScale).observe(document.getElementById('canvas-wrapper'));
-
 // ── INIT ──────────────────────────────────────────
-renderListe(); renderEgenskaper(); renderCanvas();
+renderListe(); renderEgenskaper(); oppdaterPreview();
 </script>
 </body>
 </html>
