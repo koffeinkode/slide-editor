@@ -403,7 +403,9 @@ function oppdaterBildePos(felt, verdi) {
 }
 function oppdaterRawHtml(verdi) {
   const s = aktivSlide(); if (!s) return;
+  const wasRaw = !!s.htmlRaw;
   s.htmlRaw = verdi.trim() || null;
+  if (!!s.htmlRaw !== wasRaw) renderEgenskaper();
   oppdaterPreview();
 }
 function fjernRawHtml() {
@@ -449,7 +451,7 @@ function fjernMedia(type) {
 function byttVideoTab(type) {
   const s = aktivSlide(); if (!s) return;
   s.video = {type};
-  document.querySelectorAll('.mt').forEach((b,i)=>{b.classList.toggle('aktiv',(i===0&&type==='url')||(i===1&&type==='fil'))});
+  document.querySelectorAll('#eg-innhold .mt').forEach((b,i)=>{b.classList.toggle('aktiv',(i===0&&type==='url')||(i===1&&type==='fil'))});
   document.getElementById('video-innhold').innerHTML = byggVideoInnhold(s);
 }
 
@@ -641,7 +643,7 @@ function importerHTML(fil) {
 
         const mainId = neste_id++;
         const parsedMain = parseSection(first, i, mainId);
-        parsedMain.undersider = rest.map((s, j) => ({ ...parseSection(s, j, neste_id++), undersider: undefined }));
+        parsedMain.undersider = rest.map((s, j) => { const u = parseSection(s, j, neste_id++); delete u.undersider; return u; });
         importert.push(parsedMain);
       } else {
         importert.push({ ...parseSection(sec, i, neste_id++), undersider: [] });
@@ -717,10 +719,12 @@ function eksporter() {
   <script>Reveal.initialize({hash:true,transition:'slide',navigationMode:'${innstillinger.friNavigasjon?"grid":"default"}',plugins:[RevealNotes]});<\/script>
 </body>
 </html>`;
+  const url = URL.createObjectURL(new Blob([html],{type:'text/html'}));
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.href = url;
   a.download = 'presentasjon.html';
   a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 
 // ── INNSTILLINGER ─────────────────────────────────
